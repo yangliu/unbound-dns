@@ -1,0 +1,21 @@
+#!/bin/bash
+
+UNBOUND_PATH=`pwd`
+$(which launchctl) stop $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) stop $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) stop $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+
+$(which launchctl) unload $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) unload $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) unload $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+
+rm $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+rm $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
+rm $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+
+rm $UNBOUND_PATH/root.hints
+rm $UNBOUND_PATH/unbound.conf
+rm $UNBOUND_PATH/unbound.forward-zone.China.conf
+rm $UNBOUND_PATH/unbound.local-zone.block.conf
+rm $UNBOUND_PATH/unbound.local-zone.hosts.conf
+rm $UNBOUND_PATH/update-unbound-conf.sh

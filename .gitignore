@@ -1,0 +1,6 @@
+.vscode
+.DS_*
+._*
+root.hints
+unbound.*
+update-unbound-conf.sh
