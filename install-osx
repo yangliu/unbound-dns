@@ -181,3 +181,7 @@ $(which launchctl) load $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
 $(which launchctl) start $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
 $(which launchctl) start $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
 $(which launchctl) start $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+
+# done
+echo "Unbound and DNSCrypt-Proxy have been installed."
+echo "Please set your DNS Server to 127.0.0.1"

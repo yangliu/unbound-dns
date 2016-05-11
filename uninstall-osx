@@ -19,3 +19,7 @@ rm $UNBOUND_PATH/unbound.forward-zone.China.conf
 rm $UNBOUND_PATH/unbound.local-zone.block.conf
 rm $UNBOUND_PATH/unbound.local-zone.hosts.conf
 rm $UNBOUND_PATH/update-unbound-conf.sh
+
+# done
+echo "Unbound and DNSCrypt-Proxy have been removed."
+echo "Please set your DNS Server back to the original ones"
