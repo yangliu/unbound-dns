@@ -185,3 +185,6 @@ $(which launchctl) start $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
 # done
 echo "Unbound and DNSCrypt-Proxy have been installed."
 echo "Please set your DNS Server to 127.0.0.1"
+
+# open network preference panel
+open /System/Library/PreferencePanes/Network.prefPane/

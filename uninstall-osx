@@ -23,3 +23,6 @@ rm $UNBOUND_PATH/update-unbound-conf.sh
 # done
 echo "Unbound and DNSCrypt-Proxy have been removed."
 echo "Please set your DNS Server back to the original ones"
+
+# open network preference panel
+open /System/Library/PreferencePanes/Network.prefPane/
