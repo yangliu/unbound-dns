@@ -1,8 +1,15 @@
 #!/bin/bash
 
-UNBOUND_PATH=`pwd`
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+UNBOUND_PATH="/opt/unbound-dns"
 DNSPROXY_RESOLVER_NAME=cisco
 
+mkdir -p $UNBOUND_PATH
 
 # install unbound and dnscrypt-proxy
 if test ! "$(which unbound)"; then
@@ -25,7 +32,9 @@ cat > $UNBOUND_PATH/unbound.conf <<EOL
 # This unbound.conf is "stolen" from @CNMan (https://github.com/CNMan/unbound.conf).
 # Thanks for his great work!
 server:
-	directory: "$UNBOUND_PATH"
+	#directory: "$UNBOUND_PATH"
+  username: root
+  chroot: ""
 	logfile: unbound.log
 	use-syslog: no
 	log-time-ascii: yes
@@ -44,16 +53,16 @@ server:
 	do-udp: yes
 	do-tcp: yes
 #	tcp-upstream: yes
-	root-hints: "root.hints"
+	root-hints: "$UNBOUND_PATH/root.hints"
 	hide-identity: yes
 	hide-version: yes
 
-include: "unbound.local-zone.hosts.conf"
-include: "unbound.local-zone.block.conf"
+include: "$UNBOUND_PATH/unbound.local-zone.hosts.conf"
+include: "$UNBOUND_PATH/unbound.local-zone.block.conf"
 
 # forward configuration for domains in China
 # You can replace 114.114.114.114/223.5.5.5 with China Telecom/China Unicom/China Mobile DNS resolver
-include: "unbound.forward-zone.China.conf"
+include: "$UNBOUND_PATH/unbound.forward-zone.China.conf"
 
 # Global forward configuration for other domains
 forward-zone:
@@ -66,6 +75,16 @@ $(which curl) -o "$UNBOUND_PATH/root.hints" https://www.internic.net/domain/name
 $(which curl) -o "$UNBOUND_PATH/unbound.local-zone.hosts.conf" https://raw.githubusercontent.com/CNMan/unbound.conf/master/unbound.local-zone.hosts.conf
 $(which curl) -o "$UNBOUND_PATH/unbound.local-zone.block.conf" https://raw.githubusercontent.com/CNMan/unbound.conf/master/unbound.local-zone.block.conf
 $(which curl) -o "$UNBOUND_PATH/unbound.forward-zone.China.conf" https://raw.githubusercontent.com/CNMan/unbound.conf/master/unbound.forward-zone.China.conf
+
+chown $(whoami) $UNBOUND_PATH/root.hints
+chmod a+r $UNBOUND_PATH/root.hints
+chown $(whoami) $UNBOUND_PATH/unbound.local-zone.hosts.conf
+chmod a+r $UNBOUND_PATH/unbound.local-zone.hosts.conf
+chown $(whoami) $UNBOUND_PATH/unbound.local-zone.block.conf
+chmod a+r $UNBOUND_PATH/unbound.local-zone.block.conf
+chown $(whoami) $UNBOUND_PATH/unbound.forward-zone.China.conf
+chmod a+r $UNBOUND_PATH/unbound.forward-zone.China.conf
+
 
 # generate a script to update the above rules
 cat > $UNBOUND_PATH/update-unbound-conf.sh <<EOL
@@ -93,9 +112,11 @@ fi
 chmod a+x $UNBOUND_PATH/update-unbound-conf.sh
 
 EOL
+chown $(whoami) $UNBOUND_PATH/update-unbound-conf.sh
+chmod a+r $UNBOUND_PATH/update-unbound-conf.sh
 
 # generate a launchd config file for updating the rules
-cat > $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist <<EOL
+cat > /Library/LaunchAgents/yangliu.unbound-dns.updater.plist <<EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -111,10 +132,9 @@ cat > $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist <<EOL
 </dict>
 </plist>
 EOL
-$(which launchctl) load $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
 
 # generate start up script
-cat > $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist <<EOL
+cat > /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist <<EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-/Apple/DTD PLIST 1.0/EN" "http:/www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -133,20 +153,18 @@ cat > $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist <<EOL
       <string>--resolver-name=$DNSPROXY_RESOLVER_NAME</string>
       <string>--tcp-only</string>
       <string>--max-active-requests=1024</string>
-      <string>--user=nobody</string>
     </array>
     <key>UserName</key>
     <string>root</string>
     <key>StandardErrorPath</key>
-    <string>/dev/null</string>
+    <string>/tmp/dnscrypt.err.log</string>
     <key>StandardOutPath</key>
-    <string>/dev/null</string>
+    <string>/tmp/dnscrypt.out.log</string>
   </dict>
 </plist>
 EOL
-$(which launchctl) load $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
 
-cat > $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist <<EOL
+cat > /Library/LaunchDaemons/homebrew.mxcl.unbound.plist <<EOL
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-/Apple/DTD PLIST 1.0/EN" "http:/www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -167,20 +185,26 @@ cat > $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist <<EOL
     <key>UserName</key>
     <string>root</string>
     <key>StandardErrorPath</key>
-    <string>/dev/null</string>
+    <string>/tmp/unbound.err.log</string>
     <key>StandardOutPath</key>
-    <string>/dev/null</string>
+    <string>/tmp/unbound.out.log</string>
   </dict>
 </plist>
 EOL
-$(which launchctl) load $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
-
-
 
 # start unbound
-$(which launchctl) start $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
-$(which launchctl) start $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
-$(which launchctl) start $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+chown root:wheel /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+chown root:wheel /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+chmod 0644 /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+chown root:wheel /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+chmod 0644 /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) load /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) load /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) load /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+
+$(which launchctl) start /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) start /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) start /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
 
 # done
 echo "Unbound and DNSCrypt-Proxy have been installed."

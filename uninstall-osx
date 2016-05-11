@@ -1,24 +1,27 @@
 #!/bin/bash
 
-UNBOUND_PATH=`pwd`
-$(which launchctl) stop $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
-$(which launchctl) stop $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
-$(which launchctl) stop $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+# Make sure only root can run our script
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
 
-$(which launchctl) unload $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
-$(which launchctl) unload $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
-$(which launchctl) unload $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
 
-rm $HOME/Library/LaunchAgents/yangliu.unbound-dns.updater.plist
-rm $HOME/Library/LaunchAgents/homebrew.mxcl.dnscrypt-proxy.plist
-rm $HOME/Library/LaunchAgents/homebrew.mxcl.unbound.plist
+UNBOUND_PATH="/opt/unbound-dns"
 
-rm $UNBOUND_PATH/root.hints
-rm $UNBOUND_PATH/unbound.conf
-rm $UNBOUND_PATH/unbound.forward-zone.China.conf
-rm $UNBOUND_PATH/unbound.local-zone.block.conf
-rm $UNBOUND_PATH/unbound.local-zone.hosts.conf
-rm $UNBOUND_PATH/update-unbound-conf.sh
+$(which launchctl) stop /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) stop /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) stop /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+
+$(which launchctl) unload /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+$(which launchctl) unload /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+$(which launchctl) unload /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+
+rm /Library/LaunchAgents/yangliu.unbound-dns.updater.plist
+rm /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist
+rm /Library/LaunchDaemons/homebrew.mxcl.unbound.plist
+
+rm -rf $UNBOUND_PATH
 
 # done
 echo "Unbound and DNSCrypt-Proxy have been removed."
