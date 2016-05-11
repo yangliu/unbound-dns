@@ -157,9 +157,9 @@ cat > /Library/LaunchDaemons/homebrew.mxcl.dnscrypt-proxy.plist <<EOL
     <key>UserName</key>
     <string>root</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/dnscrypt.err.log</string>
+    <string>/dev/null</string>
     <key>StandardOutPath</key>
-    <string>/tmp/dnscrypt.out.log</string>
+    <string>/dev/null</string>
   </dict>
 </plist>
 EOL
@@ -185,9 +185,9 @@ cat > /Library/LaunchDaemons/homebrew.mxcl.unbound.plist <<EOL
     <key>UserName</key>
     <string>root</string>
     <key>StandardErrorPath</key>
-    <string>/tmp/unbound.err.log</string>
+    <string>/dev/null</string>
     <key>StandardOutPath</key>
-    <string>/tmp/unbound.out.log</string>
+    <string>/dev/null</string>
   </dict>
 </plist>
 EOL
